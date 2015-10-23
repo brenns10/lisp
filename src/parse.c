@@ -174,7 +174,7 @@ static bool lisp_lex_file_has_next(smb_iter *it)
 
 static void lisp_lex_file_destroy(smb_iter *it)
 {
-  lex_destroy((smb_lex*)it->ds, false);
+  lex_delete((smb_lex*)it->ds, false);
 }
 
 static void lisp_lex_file_delete(smb_iter *it)
