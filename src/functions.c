@@ -14,9 +14,62 @@
 *******************************************************************************/
 
 #include <wchar.h>
+#include <stdarg.h>
 
 #include "libstephen/ht.h"
 #include "lisp.h"
+
+static lisp_type *get_type(char code) {
+  switch (code) {
+  case 'd':
+    return &tp_int;
+  case 'l':
+    return &tp_list;
+  case 'a':
+    return &tp_atom;
+  case 'i':
+    return &tp_identifier;
+  case 'b':
+    return &tp_builtin;
+  case 'c':
+    return &tp_funccall;
+  default:
+    return NULL;
+  }
+}
+
+static void get_args(char *fname, lisp_list *args, char *format, ...)
+{
+  va_list va;
+  int nargs;
+  int nexp;
+  bool result = false;
+  lisp_value **v;
+  lisp_type *expected_type;
+  va_start(va, format);
+
+  nargs = lisp_list_length(args);
+  nexp = strlen(format);
+  if (nargs != nexp) {
+    fprintf(stderr, "%s: wrong number of args (expected %d, got %d)\n",
+            fname, nexp, nargs);
+    exit(EXIT_FAILURE);
+  }
+
+  for (int i = 0; i < nargs; i++) {
+    v = va_arg(va, lisp_value**);
+    expected_type = get_type(format[i]);
+    if (expected_type != NULL && expected_type != args->value->type) {
+      fprintf(stderr, "%s: argument %d: expected type %s, got type %s\n",
+              fname, i, expected_type->tp_name, args->value->type->tp_name);
+      exit(EXIT_FAILURE);
+    }
+    *v = args->value;
+    args = args->next;
+  }
+
+  va_end(va);
+}
 
 unsigned int wchar_hash(DATA data)
 {
@@ -61,18 +114,13 @@ static lisp_value *lisp_add(lisp_list *params)
  */
 static lisp_value *lisp_length(lisp_list *params)
 {
+  lisp_list *l;
   lisp_int *i;
-  if (params == NULL) {
-    fprintf(stderr, "lisp_length(): too few arguments\n");
-    exit(EXIT_FAILURE);
-  }
-  if (params->value->type != &tp_list) {
-    fprintf(stderr, "lisp_length(): incorrect type argument\n");
-    exit(EXIT_FAILURE);
-  }
+
+  get_args("length", params, "l", &l);
 
   i = (lisp_int*)tp_int.tp_alloc();
-  i->value = lisp_list_length((lisp_list*)params->value);
+  i->value = lisp_list_length(l);
   return (lisp_value*)i;
 }
 
@@ -120,30 +168,28 @@ static lisp_value *lisp_subtract(lisp_list *params)
 static lisp_value *lisp_car(lisp_list *params)
 {
   lisp_list *l;
-  lisp_value *val;
-  int len = lisp_list_length(params);
+  get_args("car", params, "l", &l);
 
-  if (len <= 0) {
-    fprintf(stderr, "lisp_car(): too few arguments\n");
-    exit(EXIT_FAILURE);
-  } else if (len == 1) {
-    if (params->value == NULL) {
-      fprintf(stderr, "lisp_car(): car of empty list\n");
-      exit(EXIT_FAILURE);
-    }
-    if (params->value->type != &tp_list) {
-      fprintf(stderr, "lisp_car(): must provide list\n");
-      exit(EXIT_FAILURE);
-    }
-    l = (lisp_list *)params->value;
-    val = l->value;
-    lisp_incref(val);
-  } else {
-    fprintf(stderr, "lisp_car(): too many arguments\n");
+  if (l == NULL) {
+    fprintf(stderr, "lisp_car(): car of empty list\n");
     exit(EXIT_FAILURE);
   }
 
-  return val;
+  lisp_incref(l->value);
+  return l->value;
+}
+
+static lisp_value *lisp_cdr(lisp_list *params)
+{
+  lisp_list *l;
+  get_args("cdr", params, "l", &l);
+
+  if (l == NULL) {
+    return NULL;
+  } else {
+    lisp_incref(l->next);
+    return l->next;
+  }
 }
 
 lisp_scope *lisp_scope_create(void)
@@ -189,6 +235,10 @@ lisp_scope *lisp_create_globals(void)
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_car;
   ht_insert(&scope->table, PTR(L"car"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_cdr;
+  ht_insert(&scope->table, PTR(L"cdr"), PTR(bi));
 
   return scope;
 }
