@@ -23,6 +23,43 @@ bool lisp_interactive_exit = false;
 
 // forward-declaration
 lisp_value *lisp_evaluate(lisp_value *expression, lisp_scope *scope);
+static lisp_list *lisp_evaluate_list(lisp_list *list, lisp_scope *scope);
+
+static lisp_value *lisp_evaluate_funccall(lisp_value *expression,
+                                          lisp_scope *scope)
+{
+  lisp_builtin *bi;
+  lisp_funccall *call;
+  lisp_value *rv, *func;
+  lisp_list *args;
+
+  call = (lisp_funccall*) expression;
+  func = lisp_evaluate((lisp_value*)call->function, scope);
+
+  if (func->type == &tp_builtin) {
+    // Calling builtin functions involves calling their function pointer.
+    bi = (lisp_builtin*) func;
+
+    // Builtins do things more powerful than normal functions, and thus they can
+    // request that their arguments not be evaluated.  This is important for
+    // implementing things like if, cond, etc.
+    if (bi->eval) {
+      // Evaluate arguments beforehand.
+      args = lisp_evaluate_list(call->arguments, scope);
+      rv = bi->function(args, scope);
+      lisp_decref((lisp_value*)args);
+      lisp_decref(func);
+    } else {
+      // Don't evaluate arguments.
+      args = call->arguments;
+      rv = bi->function(args, scope);
+      lisp_decref(func);
+    }
+  } else {
+    printf("error in evaluation\n");
+  }
+  return rv;
+}
 
 /**
    @brief Return a list containing each item in a list, evaluated.
@@ -49,9 +86,7 @@ static lisp_list *lisp_evaluate_list(lisp_list *list, lisp_scope *scope)
 lisp_value *lisp_evaluate(lisp_value *expression, lisp_scope *scope)
 {
   smb_status st = SMB_SUCCESS;
-  lisp_funccall *call;
-  lisp_value *rv, *func;
-  lisp_list *args;
+  lisp_value *rv;
   lisp_identifier *id;
 
   if (expression->type == &tp_int ||
@@ -61,17 +96,7 @@ lisp_value *lisp_evaluate(lisp_value *expression, lisp_scope *scope)
     lisp_incref(expression);
     rv = expression;
   } else if (expression->type == &tp_funccall) {
-    call = (lisp_funccall *)expression;
-    func = lisp_evaluate((lisp_value*)call->function, scope);
-    args = lisp_evaluate_list(call->arguments, scope);
-    if (func->type == &tp_builtin) {
-      lisp_builtin *builtin = (lisp_builtin*) func;
-      rv = builtin->function(args);
-      lisp_decref((lisp_value*)args);
-      lisp_decref(func);
-    } else {
-      printf("error in evaluation\n");
-    }
+    rv = lisp_evaluate_funccall(expression, scope);
   } else {
     id = (lisp_identifier*)expression;
     rv = ht_get(&scope->table, PTR(id->value), &st).data_ptr;

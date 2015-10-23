@@ -20,6 +20,11 @@
 #include "libstephen/ht.h"
 #include "lisp.h"
 
+bool lisp_truthy(lisp_value *expr)
+{
+  return (expr->type == &tp_int) && (((lisp_int*)expr)->value != 0);
+}
+
 static lisp_type *get_type(char code) {
   switch (code) {
   case 'd':
@@ -95,8 +100,9 @@ int data_compare_wstring(DATA d1, DATA d2)
 /**
    @brief Add any number of values.
  */
-static lisp_value *lisp_add(lisp_list *params)
+static lisp_value *lisp_add(lisp_list *params, lisp_scope *scope)
 {
+  (void)scope; //unused
   lisp_int *rv = (lisp_int*)tp_int.tp_alloc();
   while (params->value) {
     if (params->value->type != &tp_int) {
@@ -112,8 +118,9 @@ static lisp_value *lisp_add(lisp_list *params)
 /**
    @brief Return the length of a list.
  */
-static lisp_value *lisp_length(lisp_list *params)
+static lisp_value *lisp_length(lisp_list *params, lisp_scope *scope)
 {
+  (void)scope; //unused
   lisp_list *l;
   lisp_int *i;
 
@@ -127,8 +134,9 @@ static lisp_value *lisp_length(lisp_list *params)
 /**
    @brief Subtract some number of values form the first one.
  */
-static lisp_value *lisp_subtract(lisp_list *params)
+static lisp_value *lisp_subtract(lisp_list *params, lisp_scope *scope)
 {
+  (void)scope; //unused
   lisp_int *rv;
   int len = lisp_list_length(params);
 
@@ -165,8 +173,9 @@ static lisp_value *lisp_subtract(lisp_list *params)
   return (lisp_value*)rv;
 }
 
-static lisp_value *lisp_car(lisp_list *params)
+static lisp_value *lisp_car(lisp_list *params, lisp_scope *scope)
 {
+  (void)scope; //unused
   lisp_list *l;
   get_args("car", params, "l", &l);
 
@@ -179,8 +188,9 @@ static lisp_value *lisp_car(lisp_list *params)
   return l->value;
 }
 
-static lisp_value *lisp_cdr(lisp_list *params)
+static lisp_value *lisp_cdr(lisp_list *params, lisp_scope *scope)
 {
+  (void)scope; //unused
   lisp_list *l;
   get_args("cdr", params, "l", &l);
 
@@ -192,8 +202,9 @@ static lisp_value *lisp_cdr(lisp_list *params)
   }
 }
 
-static lisp_value *lisp_exit(lisp_list *params)
+static lisp_value *lisp_exit(lisp_list *params, lisp_scope *scope)
 {
+  (void)scope; //unused
   (void)params; // unused
   lisp_value *rv;
   lisp_interactive_exit = true;
@@ -204,6 +215,19 @@ static lisp_value *lisp_exit(lisp_list *params)
     rv = (lisp_value*)tp_int.tp_alloc();
   }
   return rv;
+}
+
+static lisp_value *lisp_if(lisp_list *params, lisp_scope *scope)
+{
+  lisp_value *condition, *if_true, *if_false;
+  get_args("if", params, "???", &condition, &if_true, &if_false);
+
+  condition = lisp_evaluate(condition, scope);
+  if (lisp_truthy(condition)) {
+    return lisp_evaluate(if_true, scope);
+  } else {
+    return lisp_evaluate(if_false, scope);
+  }
 }
 
 lisp_scope *lisp_scope_create(void)
@@ -257,6 +281,11 @@ lisp_scope *lisp_create_globals(void)
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_exit;
   ht_insert(&scope->table, PTR(L"exit"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_if;
+  bi->eval = false;
+  ht_insert(&scope->table, PTR(L"if"), PTR(bi));
 
   return scope;
 }

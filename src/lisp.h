@@ -76,6 +76,23 @@ struct lisp_value {
 
 };
 
+/**
+   @brief A struct to represent one level of scope.
+ */
+typedef struct lisp_scope {
+
+  /**
+     @brief Hash table containing variables!
+   */
+  smb_ht table;
+
+  /**
+     @brief Pointer to the previous level of scope.
+   */
+  struct lisp_scope *up;
+
+} lisp_scope;
+
 /*******************************************************************************
                           "Child" types of lisp_value
 *******************************************************************************/
@@ -113,7 +130,8 @@ lisp_type tp_funccall;
 
 typedef struct {
   lisp_value lv;
-  lisp_value * (*function) (lisp_list *);
+  lisp_value * (*function) (lisp_list *, lisp_scope *);
+  bool eval;
 } lisp_builtin;
 lisp_type tp_builtin;
 
@@ -121,23 +139,6 @@ lisp_type tp_builtin;
                     Some useful utility functions on lists.
 *******************************************************************************/
 int lisp_list_length(lisp_list *l);
-
-/**
-   @brief A struct to represent one level of scope.
- */
-typedef struct lisp_scope {
-
-  /**
-     @brief Hash table containing variables!
-   */
-  smb_ht table;
-
-  /**
-     @brief Pointer to the previous level of scope.
-   */
-  struct lisp_scope *up;
-
-} lisp_scope;
 
 /**
    @brief Tokenize a string.

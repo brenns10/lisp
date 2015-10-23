@@ -260,6 +260,7 @@ static lisp_value *lisp_builtin_alloc(void)
   rv->lv.type = &tp_builtin;
   rv->lv.refcount = 1;
   rv->function = NULL;
+  rv->eval = true;
   return (lisp_value *)rv;
 }
 
