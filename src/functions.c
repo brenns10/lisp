@@ -170,7 +170,7 @@ static lisp_value *lisp_car(lisp_list *params)
   lisp_list *l;
   get_args("car", params, "l", &l);
 
-  if (l == NULL) {
+  if (l->value == NULL) {
     fprintf(stderr, "lisp_car(): car of empty list\n");
     exit(EXIT_FAILURE);
   }
