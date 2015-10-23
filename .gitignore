@@ -1,0 +1,10 @@
+obj/*
+bin/*
+doc/*
+cov/*
+dep/*
+*~
+src/*.gch
+GTAGS
+GRTAGS
+GPATH
