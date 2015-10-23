@@ -114,5 +114,6 @@ void lisp_interact(void)
     lisp_decref(res);
   }
 
+  token_iter.destroy(&token_iter);
   lisp_scope_delete(scope);
 }
