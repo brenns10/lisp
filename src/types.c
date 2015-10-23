@@ -223,7 +223,6 @@ static void lisp_list_print(lisp_value *value, FILE *f, int indent)
   while (l != NULL) {
     print_n_spaces(f, indent + 1);
     l->value->type->tp_print(l->value, f, indent + 1);
-    fprintf(f, "\n");
     l = l->next;
   }
 
