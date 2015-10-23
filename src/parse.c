@@ -207,21 +207,18 @@ static lisp_value *lisp_parse_rec(smb_iter *, bool);
    @returns A lisp list containing parsed code.
  */
 static lisp_list *lisp_parse_list(smb_iter *it, bool within_list) {
-  lisp_list *prev = NULL, *list = NULL, *orig = NULL;
+  lisp_list *curr = NULL, *orig = NULL;
   lisp_value *value;
 
-  // lisp_parse_rec() will return NULL when the matching closing paren is reached
-  while ((value = lisp_parse_rec(it, within_list)) != NULL) {
-    list = (lisp_list*)tp_list.tp_alloc();
-    list->value = value;
-    list->next = NULL;
-    if (prev) {
-      prev->next = list;
-    } else {
-      orig = list;
-    }
-    prev = list;
-  }
+  orig = (lisp_list*)tp_list.tp_alloc();
+  curr = orig;
+
+  do {
+    value = lisp_parse_rec(it, within_list);
+    curr->value = value;
+    curr->next = (lisp_list*)tp_list.tp_alloc();
+    curr = curr->next;
+  } while (value != NULL);
 
   return orig;
 }

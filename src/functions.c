@@ -98,7 +98,7 @@ int data_compare_wstring(DATA d1, DATA d2)
 static lisp_value *lisp_add(lisp_list *params)
 {
   lisp_int *rv = (lisp_int*)tp_int.tp_alloc();
-  while (params) {
+  while (params->value) {
     if (params->value->type != &tp_int) {
       fprintf(stderr, "lisp_add(): type error\n");
       exit(EXIT_FAILURE);
@@ -192,6 +192,20 @@ static lisp_value *lisp_cdr(lisp_list *params)
   }
 }
 
+static lisp_value *lisp_exit(lisp_list *params)
+{
+  (void)params; // unused
+  lisp_value *rv;
+  lisp_interactive_exit = true;
+  if (params->value != NULL) {
+    rv = params->value;
+    lisp_incref(rv);
+  } else {
+    rv = (lisp_value*)tp_int.tp_alloc();
+  }
+  return rv;
+}
+
 lisp_scope *lisp_scope_create(void)
 {
   lisp_scope *scope = smb_new(lisp_scope, 1);
@@ -239,6 +253,10 @@ lisp_scope *lisp_create_globals(void)
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_cdr;
   ht_insert(&scope->table, PTR(L"cdr"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_exit;
+  ht_insert(&scope->table, PTR(L"exit"), PTR(bi));
 
   return scope;
 }

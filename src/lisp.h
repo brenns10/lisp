@@ -204,4 +204,7 @@ void lisp_decref(lisp_value *lv);
 lisp_scope *lisp_create_globals(void);
 lisp_scope *lisp_scope_create(void);
 void lisp_scope_delete(lisp_scope *scope);
+
+bool lisp_interactive_exit;
+
 #endif // CKY_LISP_H

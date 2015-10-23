@@ -102,7 +102,7 @@ static void lisp_atom_print(lisp_value *value, FILE *f, int indent)
 {
   (void)indent; // unused
   lisp_atom *val = (lisp_atom *) value;
-  fprintf(f, "'%ls\n", val->value);
+  fprintf(f, "%ls\n", val->value);
 }
 
 lisp_type tp_atom = {
@@ -214,7 +214,7 @@ static void lisp_list_dealloc(lisp_value *value)
   lisp_list *list = (lisp_list *)value;
   lisp_decref(list->value);
   lisp_decref((lisp_value*)list->next);
-  smb_free(value);
+  smb_free(list);
 }
 
 static void lisp_list_print(lisp_value *value, FILE *f, int indent)
@@ -223,7 +223,7 @@ static void lisp_list_print(lisp_value *value, FILE *f, int indent)
 
   fprintf(f, "(\n");
 
-  while (l != NULL) {
+  while (l->value != NULL) {
     print_n_spaces(f, indent + 1);
     l->value->type->tp_print(l->value, f, indent + 1);
     l = l->next;
@@ -243,7 +243,7 @@ lisp_type tp_list = {
 int lisp_list_length(lisp_list *l)
 {
   int i = 0;
-  while (l) {
+  while (l->value != NULL) {
     i++;
     l = l->next;
   }

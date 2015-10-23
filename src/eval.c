@@ -19,6 +19,8 @@
 #include "lex.h"
 #include "lisp.h"
 
+bool lisp_interactive_exit = false;
+
 // forward-declaration
 lisp_value *lisp_evaluate(lisp_value *expression, lisp_scope *scope);
 
@@ -30,7 +32,9 @@ lisp_value *lisp_evaluate(lisp_value *expression, lisp_scope *scope);
  */
 static lisp_list *lisp_evaluate_list(lisp_list *list, lisp_scope *scope)
 {
-  if (list == NULL) return NULL;
+  if (list->value == NULL) {
+    return (lisp_list*)tp_list.tp_alloc();
+  }
   lisp_list *l = (lisp_list*) tp_list.tp_alloc();
   l->value = lisp_evaluate(list->value, scope);
   l->next = lisp_evaluate_list(list->next, scope);
@@ -100,9 +104,10 @@ void lisp_interact(void)
   // Create an iterator of lisp tokens taken from stdin.
   smb_iter token_iter = lisp_lex_file(stdin);
   lisp_scope *scope = lisp_create_globals();
+  lisp_interactive_exit = false;
 
   // While there are still tokens remaining...
-  while (token_iter.has_next(&token_iter)) {
+  while (token_iter.has_next(&token_iter) && !lisp_interactive_exit) {
     printf("> ");
     fflush(stdout);
 
