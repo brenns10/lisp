@@ -46,9 +46,6 @@ So right now, all the functions you have are:
 - `cdr` for getting the rest of a list
 - `length` for getting the length of a list
 
-Unfortunately, I need to rethink the way I deal with empty lists, cause right
-now it is causing segfaults :(
-
 The Code
 --------
 
