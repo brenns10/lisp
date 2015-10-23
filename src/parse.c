@@ -114,6 +114,8 @@ smb_ll *lisp_lex(wchar_t *str)
       str += length;
       continue;
     case ATOM:
+      str += 1;   // we ignore the quote - atoms are stored sans quote
+      length -= 1;
     case IDENTIFIER:
     case INTEGER:
       lt->text = smb_new(wchar_t, length + 1);
@@ -134,6 +136,7 @@ smb_ll *lisp_lex(wchar_t *str)
 }
 
 static DATA lisp_lex_file_next(smb_iter *it, smb_status *st) {
+  wchar_t *cpy;
   smb_status status = SMB_SUCCESS;
   smb_lex *lex = it->ds;
   FILE *f = (FILE*)it->state.data_ptr;
@@ -148,6 +151,11 @@ static DATA lisp_lex_file_next(smb_iter *it, smb_status *st) {
     return lisp_lex_file_next(it, st);
     break;
   case ATOM:
+    cpy = smb_new(wchar_t, length);
+    wcsncpy(cpy, lt->text+1, length);
+    smb_free(lt->text);
+    lt->text = cpy;
+    break;
   case IDENTIFIER:
   case INTEGER:
     break;

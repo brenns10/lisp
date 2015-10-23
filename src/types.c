@@ -102,7 +102,7 @@ static void lisp_atom_print(lisp_value *value, FILE *f, int indent)
 {
   (void)indent; // unused
   lisp_atom *val = (lisp_atom *) value;
-  fprintf(f, "%ls\n", val->value);
+  fprintf(f, "'%ls\n", val->value);
 }
 
 lisp_type tp_atom = {
