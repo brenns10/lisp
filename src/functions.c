@@ -230,6 +230,32 @@ static lisp_value *lisp_if(lisp_list *params, lisp_scope *scope)
   }
 }
 
+static lisp_value *lisp_lambda(lisp_list *params, lisp_scope *scope)
+{
+  (void)scope; //unused (for now)
+  lisp_value *arglist;
+  lisp_value *expression;
+  lisp_list *list;
+  lisp_function *function = (lisp_function*)tp_function.tp_alloc();
+  get_args("lambda", params, "??", &arglist, &expression);
+
+  // The argument list will show up as a func call when there are any arguments,
+  // but it will be an empty list if there aren't.
+  if (arglist->type == &tp_list) {
+    lisp_incref(arglist);
+    function->arglist = (lisp_list*) arglist;
+  } else if (arglist->type == &tp_funccall) {
+    list = (lisp_list*)tp_list.tp_alloc();
+    list->value = ((lisp_funccall*)arglist)->function;
+    list->next = ((lisp_funccall*)arglist)->arguments;
+    lisp_incref(list->value);
+    lisp_incref((lisp_value*)list->next);
+    function->arglist = list;
+  }
+  function->code = expression;
+  return (lisp_value*)function;
+}
+
 lisp_scope *lisp_scope_create(void)
 {
   lisp_scope *scope = smb_new(lisp_scope, 1);
@@ -286,6 +312,11 @@ lisp_scope *lisp_create_globals(void)
   bi->function = &lisp_if;
   bi->eval = false;
   ht_insert(&scope->table, PTR(L"if"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_lambda;
+  bi->eval = false;
+  ht_insert(&scope->table, PTR(L"lambda"), PTR(bi));
 
   return scope;
 }

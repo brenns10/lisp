@@ -178,7 +178,7 @@ static void lisp_funccall_print(lisp_value *value, FILE *f, int indent)
   fprintf(f, "\n");
 
   l = call->arguments;
-  while (l != NULL) {
+  while (l->value != NULL) {
     print_n_spaces(f, indent + 1);
     l->value->type->tp_print(l->value, f, indent + 1);
     l = l->next;
@@ -276,4 +276,45 @@ lisp_type tp_builtin = {
   .tp_alloc = &lisp_builtin_alloc,
   .tp_dealloc = &generic_dealloc,
   .tp_print = &lisp_builtin_print
+};
+
+/*******************************************************************************
+                          tp_function / lisp_function
+*******************************************************************************/
+
+static lisp_value *lisp_function_alloc(void)
+{
+  lisp_function *rv = smb_new(lisp_function, 1);
+  rv->lv.type = &tp_function;
+  rv->lv.refcount = 1;
+  rv->arglist = NULL;
+  rv->code = NULL;
+  return (lisp_value *)rv;
+}
+
+static void lisp_function_dealloc(lisp_value *value)
+{
+  lisp_function *func = (lisp_function*) value;
+  lisp_decref((lisp_value*)func->arglist);
+  lisp_decref(func->code);
+  smb_free(func);
+}
+
+static void lisp_function_print(lisp_value *value, FILE *f, int indent)
+{
+  lisp_function *func = (lisp_function*) value;
+  fprintf(f, "(lambda\n");
+  print_n_spaces(f, indent + 1);
+  func->arglist->lv.type->tp_print((lisp_value*)func->arglist, f, indent + 1);
+  print_n_spaces(f, indent + 1);
+  func->code->type->tp_print(func->code, f, indent + 1);
+  print_n_spaces(f, indent);
+  fprintf(f, ")\n");
+}
+
+lisp_type tp_function = {
+  .tp_name = "function",
+  .tp_alloc = &lisp_function_alloc,
+  .tp_dealloc = &lisp_function_dealloc,
+  .tp_print = &lisp_function_print
 };

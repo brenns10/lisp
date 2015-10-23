@@ -135,6 +135,13 @@ typedef struct {
 } lisp_builtin;
 lisp_type tp_builtin;
 
+typedef struct {
+  lisp_value lv;
+  lisp_list *arglist;
+  lisp_value *code;
+} lisp_function;
+lisp_type tp_function;
+
 /*******************************************************************************
                     Some useful utility functions on lists.
 *******************************************************************************/

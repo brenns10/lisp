@@ -16,6 +16,7 @@
 #include <assert.h>
 
 #include "libstephen/str.h"
+#include "libstephen/ht.h"
 #include "lex.h"
 #include "lisp.h"
 
@@ -25,13 +26,25 @@ bool lisp_interactive_exit = false;
 lisp_value *lisp_evaluate(lisp_value *expression, lisp_scope *scope);
 static lisp_list *lisp_evaluate_list(lisp_list *list, lisp_scope *scope);
 
+static void add_to_scope(lisp_list *names, lisp_list *values, lisp_scope *scope)
+{
+  lisp_identifier *id;
+  while (names->value != NULL && values->value != NULL) {
+    id = (lisp_identifier*) names->value;
+    ht_insert(&scope->table, PTR(id->value), PTR(values->value));
+    names = names->next; values = values->next;
+  }
+}
+
 static lisp_value *lisp_evaluate_funccall(lisp_value *expression,
                                           lisp_scope *scope)
 {
   lisp_builtin *bi;
+  lisp_function *f;
   lisp_funccall *call;
   lisp_value *rv, *func;
   lisp_list *args;
+  lisp_scope *new_scope;
 
   call = (lisp_funccall*) expression;
   func = lisp_evaluate((lisp_value*)call->function, scope);
@@ -55,6 +68,15 @@ static lisp_value *lisp_evaluate_funccall(lisp_value *expression,
       rv = bi->function(args, scope);
       lisp_decref(func);
     }
+  } else if(func->type == &tp_function) {
+    f = (lisp_function*) func;
+    args = lisp_evaluate_list(call->arguments, scope);
+    new_scope = lisp_scope_create();
+    new_scope->up = scope;
+    add_to_scope(f->arglist, args, new_scope);
+    rv = lisp_evaluate((lisp_value*)f->code, new_scope);
+    lisp_decref((lisp_value*)args);
+    lisp_decref(func);
   } else {
     printf("error in evaluation\n");
   }
@@ -99,10 +121,18 @@ lisp_value *lisp_evaluate(lisp_value *expression, lisp_scope *scope)
     rv = lisp_evaluate_funccall(expression, scope);
   } else {
     id = (lisp_identifier*)expression;
-    rv = ht_get(&scope->table, PTR(id->value), &st).data_ptr;
-    assert(st == SMB_SUCCESS);
-    lisp_incref(rv); // we are returning a new reference not owned by scope
-    return rv;
+    while (scope) {
+      rv = ht_get(&scope->table, PTR(id->value), &st).data_ptr;
+      if (st == SMB_SUCCESS) {
+        lisp_incref(rv); // we are returning a new reference not owned by scope
+        return rv;
+      }
+      st = SMB_SUCCESS;
+      scope = scope->up;
+    }
+    fprintf(stderr, "lisp: definition of identifier \"%ls\" not found\n",
+            id->value);
+    exit(EXIT_FAILURE);
   }
   return rv;
 }
