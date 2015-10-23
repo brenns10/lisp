@@ -66,6 +66,7 @@ static lisp_value *lisp_int_alloc(void)
 
 static void lisp_int_print(lisp_value *value, FILE *f, int indent)
 {
+  (void)indent; // unused
   lisp_int *val = (lisp_int *)value;
   fprintf(f, "%ld\n", val->value);
 }
@@ -99,6 +100,7 @@ static void lisp_atom_dealloc(lisp_value *value)
 
 static void lisp_atom_print(lisp_value *value, FILE *f, int indent)
 {
+  (void)indent; // unused
   lisp_atom *val = (lisp_atom *) value;
   fprintf(f, "'%ls\n", val->value);
 }
@@ -132,6 +134,7 @@ static void lisp_identifier_dealloc(lisp_value *value)
 
 static void lisp_identifier_print(lisp_value *value, FILE *f, int indent)
 {
+  (void)indent; // unused
   lisp_identifier *val = (lisp_identifier *) value;
   fprintf(f, "%ls\n", val->value);
 }
@@ -262,6 +265,8 @@ static lisp_value *lisp_builtin_alloc(void)
 
 static void lisp_builtin_print(lisp_value *value, FILE *f, int indent)
 {
+  (void)indent; // unused
+  (void)value; // unused
   fprintf(f, "builtin-function\n");
 }
 

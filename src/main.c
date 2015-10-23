@@ -17,6 +17,8 @@
 
 int main(int argc, char *argv[])
 {
+  (void)argc; // unused
+  (void)argv; // unused
   lisp_interact();
   return 0;
 }

@@ -180,6 +180,11 @@ lisp_value *lisp_evaluate(lisp_value *expr, lisp_scope *scope);
 lisp_value *lisp_run(wchar_t *str);
 
 /**
+   @brief Run an interactive lisp session on stdin.
+ */
+void lisp_interact(void);
+
+/**
    @brief Increment the reference count of an object.
    @param lv Object to incref (nullable)
  */
@@ -198,5 +203,5 @@ void lisp_decref(lisp_value *lv);
  */
 lisp_scope *lisp_create_globals(void);
 lisp_scope *lisp_scope_create(void);
-void *lisp_scope_delete(lisp_scope *scope);
+void lisp_scope_delete(lisp_scope *scope);
 #endif // CKY_LISP_H

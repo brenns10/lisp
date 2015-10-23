@@ -210,6 +210,7 @@ DATA lex_get_token(smb_lex *obj, smb_lex_sim *sim)
 
 int lex_get_length(smb_lex *obj, smb_lex_sim *sim)
 {
+  (void)obj; //unused
   if (!sim->finished) {
     return -1;
   } else {
@@ -233,6 +234,7 @@ void lex_sim_delete(smb_lex_sim *sim)
 void lex_yylex(smb_lex *obj, wchar_t *input, DATA *token, int *length,
                smb_status *status)
 {
+  (void)status; //unused
   smb_lex_sim *sim = lex_start(obj);
 
   while (!sim->finished) {
@@ -247,6 +249,7 @@ void lex_yylex(smb_lex *obj, wchar_t *input, DATA *token, int *length,
 wchar_t *lex_fyylex(smb_lex *obj, FILE *input, DATA *token, int *length,
                     smb_status *status)
 {
+  (void)status; //unused
   smb_lex_sim *sim = lex_start(obj);
   wcbuf wcb;
   wchar_t curr;

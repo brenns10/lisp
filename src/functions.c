@@ -15,6 +15,7 @@
 
 #include <wchar.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "libstephen/ht.h"
 #include "lisp.h"
@@ -43,7 +44,6 @@ static void get_args(char *fname, lisp_list *args, char *format, ...)
   va_list va;
   int nargs;
   int nexp;
-  bool result = false;
   lisp_value **v;
   lisp_type *expected_type;
   va_start(va, format);
@@ -187,8 +187,8 @@ static lisp_value *lisp_cdr(lisp_list *params)
   if (l == NULL) {
     return NULL;
   } else {
-    lisp_incref(l->next);
-    return l->next;
+    lisp_incref((lisp_value*)l->next);
+    return (lisp_value*)l->next;
   }
 }
 
@@ -206,7 +206,7 @@ static void lisp_scope_values_decref(DATA d)
   lisp_decref(v);
 }
 
-void *lisp_scope_delete(lisp_scope *scope)
+void lisp_scope_delete(lisp_scope *scope)
 {
   ht_destroy_act(&scope->table, &lisp_scope_values_decref);
   smb_free(scope);
