@@ -252,8 +252,21 @@ static lisp_value *lisp_lambda(lisp_list *params, lisp_scope *scope)
     lisp_incref((lisp_value*)list->next);
     function->arglist = list;
   }
+  lisp_incref(expression);
   function->code = expression;
   return (lisp_value*)function;
+}
+
+static lisp_value *lisp_define(lisp_list *params, lisp_scope *scope)
+{
+  lisp_identifier *name;
+  lisp_value *value;
+  get_args("define", params, "i?", &name, &value);
+  value = lisp_evaluate(value, scope);
+  lisp_incref(value); // one reference belongs to the table
+  lisp_incref((lisp_value*)name); // one reference belongs to the table (but never leaves...)
+  ht_insert(&scope->table, PTR(name->value), PTR(value));
+  return value;
 }
 
 lisp_scope *lisp_scope_create(void)
@@ -317,6 +330,11 @@ lisp_scope *lisp_create_globals(void)
   bi->function = &lisp_lambda;
   bi->eval = false;
   ht_insert(&scope->table, PTR(L"lambda"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_define;
+  bi->eval = false;
+  ht_insert(&scope->table, PTR(L"define"), PTR(bi));
 
   return scope;
 }

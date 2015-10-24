@@ -31,6 +31,7 @@ static void add_to_scope(lisp_list *names, lisp_list *values, lisp_scope *scope)
   lisp_identifier *id;
   while (names->value != NULL && values->value != NULL) {
     id = (lisp_identifier*) names->value;
+    lisp_incref(values->value);
     ht_insert(&scope->table, PTR(id->value), PTR(values->value));
     names = names->next; values = values->next;
   }
@@ -61,12 +62,10 @@ static lisp_value *lisp_evaluate_funccall(lisp_value *expression,
       args = lisp_evaluate_list(call->arguments, scope);
       rv = bi->function(args, scope);
       lisp_decref((lisp_value*)args);
-      lisp_decref(func);
     } else {
       // Don't evaluate arguments.
       args = call->arguments;
       rv = bi->function(args, scope);
-      lisp_decref(func);
     }
   } else if(func->type == &tp_function) {
     f = (lisp_function*) func;
@@ -75,11 +74,12 @@ static lisp_value *lisp_evaluate_funccall(lisp_value *expression,
     new_scope->up = scope;
     add_to_scope(f->arglist, args, new_scope);
     rv = lisp_evaluate((lisp_value*)f->code, new_scope);
+    lisp_scope_delete(new_scope);
     lisp_decref((lisp_value*)args);
-    lisp_decref(func);
   } else {
     printf("error in evaluation\n");
   }
+  lisp_decref(func);
   return rv;
 }
 
@@ -114,7 +114,8 @@ lisp_value *lisp_evaluate(lisp_value *expression, lisp_scope *scope)
   if (expression->type == &tp_int ||
       expression->type == &tp_atom ||
       expression->type == &tp_list ||
-      expression->type == &tp_builtin) {
+      expression->type == &tp_builtin ||
+      expression->type == &tp_function) {
     lisp_incref(expression);
     rv = expression;
   } else if (expression->type == &tp_funccall) {
