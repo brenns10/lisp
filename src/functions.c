@@ -202,6 +202,23 @@ static lisp_value *lisp_cdr(lisp_list *params, lisp_scope *scope)
   }
 }
 
+static lisp_value *lisp_cons(lisp_list *params, lisp_scope *scope)
+{
+  (void)scope; //unused
+  lisp_value *v;
+  lisp_list *old_list;
+  lisp_list *new_list;
+
+  get_args("cons", params, "?l", &v, &old_list);
+
+  new_list = (lisp_list*)tp_list.tp_alloc();
+  new_list->value = v;
+  new_list->next = old_list;
+  lisp_incref(v);
+  lisp_incref((lisp_value*)old_list);
+  return (lisp_value*)new_list;
+}
+
 static lisp_value *lisp_exit(lisp_list *params, lisp_scope *scope)
 {
   (void)scope; //unused
@@ -316,6 +333,10 @@ lisp_scope *lisp_create_globals(void)
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_cdr;
   ht_insert(&scope->table, PTR(L"cdr"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_cons;
+  ht_insert(&scope->table, PTR(L"cons"), PTR(bi));
 
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_exit;
