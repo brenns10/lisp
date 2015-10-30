@@ -85,12 +85,13 @@ typedef struct {
  */
 static smb_lex *lisp_create_lexer(void)
 {
+  #define IDCHAR "a-zA-Z_+/*?%$=><\\.!&\\|:~^-"
   smb_lex *lexer = lex_create();
   lex_add_token(lexer, L"\\s+", LLINT(WHITESPACE));
   lex_add_token(lexer, L"\\(", LLINT(OPEN_PAREN));
   lex_add_token(lexer, L"\\)", LLINT(CLOSE_PAREN));
-  lex_add_token(lexer, L"[a-zA-Z_+/*?%$=-][0-9a-zA-Z_+/*?%$=-]*", LLINT(IDENTIFIER));
-  lex_add_token(lexer, L"'[0-9a-zA-Z_+/*?%$=-]+", LLINT(ATOM));
+  lex_add_token(lexer, L"["IDCHAR"][0-9"IDCHAR"]*", LLINT(IDENTIFIER));
+  lex_add_token(lexer, L"'[0-9IDCHAR]+", LLINT(ATOM));
   lex_add_token(lexer, L"\\d+", LLINT(INTEGER));
   lex_add_token(lexer, L"'\\(", LLINT(OPEN_LIST));
   return lexer;

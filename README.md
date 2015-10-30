@@ -82,6 +82,7 @@ What is available in the language right now:
 - `if` for if statements (branch not taken is not evaluated!)
 - `lambda` for creating a function (**closures aren't yet supported**)
 - `define` for binding a name to your current scope
+- `=`, `<`, `>`, `<=`, `>=`, for comparing integers
 
 The Code
 --------

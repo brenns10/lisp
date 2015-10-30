@@ -286,6 +286,56 @@ static lisp_value *lisp_define(lisp_list *params, lisp_scope *scope)
   return value;
 }
 
+static lisp_value *lisp_numeq(lisp_list *params, lisp_scope *scope)
+{
+  (void)scope; // unused
+  lisp_int *a, *b, *retval;
+  get_args("=", params, "dd", &a, &b);
+  retval = (lisp_int *)tp_int.tp_alloc();
+  retval->value = (a->value == b->value);
+  return (lisp_value *)retval;
+}
+
+static lisp_value *lisp_numlt(lisp_list *params, lisp_scope *scope)
+{
+  (void)scope; // unused
+  lisp_int *a, *b, *retval;
+  get_args("=", params, "dd", &a, &b);
+  retval = (lisp_int *)tp_int.tp_alloc();
+  retval->value = (a->value < b->value);
+  return (lisp_value *)retval;
+}
+
+static lisp_value *lisp_numgt(lisp_list *params, lisp_scope *scope)
+{
+  (void)scope; // unused
+  lisp_int *a, *b, *retval;
+  get_args("=", params, "dd", &a, &b);
+  retval = (lisp_int *)tp_int.tp_alloc();
+  retval->value = (a->value > b->value);
+  return (lisp_value *)retval;
+}
+
+static lisp_value *lisp_numle(lisp_list *params, lisp_scope *scope)
+{
+  (void)scope; // unused
+  lisp_int *a, *b, *retval;
+  get_args("=", params, "dd", &a, &b);
+  retval = (lisp_int *)tp_int.tp_alloc();
+  retval->value = (a->value <= b->value);
+  return (lisp_value *)retval;
+}
+
+static lisp_value *lisp_numge(lisp_list *params, lisp_scope *scope)
+{
+  (void)scope; // unused
+  lisp_int *a, *b, *retval;
+  get_args("=", params, "dd", &a, &b);
+  retval = (lisp_int *)tp_int.tp_alloc();
+  retval->value = (a->value >= b->value);
+  return (lisp_value *)retval;
+}
+
 lisp_scope *lisp_scope_create(void)
 {
   lisp_scope *scope = smb_new(lisp_scope, 1);
@@ -341,6 +391,26 @@ lisp_scope *lisp_create_globals(void)
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_exit;
   ht_insert(&scope->table, PTR(L"exit"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_numeq;
+  ht_insert(&scope->table, PTR(L"="), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_numlt;
+  ht_insert(&scope->table, PTR(L"<"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_numgt;
+  ht_insert(&scope->table, PTR(L">"), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_numle;
+  ht_insert(&scope->table, PTR(L"<="), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_numge;
+  ht_insert(&scope->table, PTR(L">="), PTR(bi));
 
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_if;
