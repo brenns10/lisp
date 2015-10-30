@@ -336,6 +336,24 @@ static lisp_value *lisp_numge(lisp_list *params, lisp_scope *scope)
   return (lisp_value *)retval;
 }
 
+static lisp_value *lisp_null_p(lisp_list *params, lisp_scope *scope)
+{
+  (void)scope; // unused
+  lisp_value *v;
+  lisp_list *l;
+  lisp_int *retval;
+  get_args("null?", params, "?", &v);
+  retval = (lisp_int*) tp_int.tp_alloc();
+
+  if (v->type == &tp_list) {
+    l = (lisp_list *) v;
+    retval->value = (l->value == NULL);
+  } else {
+    retval->value = 0;
+  }
+  return (lisp_value *)retval;
+}
+
 lisp_scope *lisp_scope_create(void)
 {
   lisp_scope *scope = smb_new(lisp_scope, 1);
@@ -411,6 +429,10 @@ lisp_scope *lisp_create_globals(void)
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_numge;
   ht_insert(&scope->table, PTR(L">="), PTR(bi));
+
+  bi = (lisp_builtin*)tp_builtin.tp_alloc();
+  bi->function = &lisp_null_p;
+  ht_insert(&scope->table, PTR(L"null?"), PTR(bi));
 
   bi = (lisp_builtin*)tp_builtin.tp_alloc();
   bi->function = &lisp_if;

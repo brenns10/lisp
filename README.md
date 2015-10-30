@@ -83,6 +83,7 @@ What is available in the language right now:
 - `lambda` for creating a function (**closures aren't yet supported**)
 - `define` for binding a name to your current scope
 - `=`, `<`, `>`, `<=`, `>=`, for comparing integers
+- `null?` returns true if its argument is the empty list
 
 The Code
 --------
