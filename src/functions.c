@@ -13,7 +13,6 @@
 
 *******************************************************************************/
 
-#include <wchar.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -44,6 +43,19 @@ static lisp_type *get_type(char code) {
   }
 }
 
+/**
+   @brief Parse a lisp_list of args.
+   @param fname The name of the lisp function (for error messages).
+   @param args The list of arguments.
+   @param format A format string specifying the type of each argument.
+   @param ... Pointers to lisp_value* where this function will put arguments.
+
+   Since it really stinks to write code to manually check each argument's type
+   and extract it into a correctly typed variable, this function simplifies it
+   for you.  You pass a format string where character i codes for the type of
+   argument i.  This function ensures the correct type and number of arguments,
+   and puts them into the variables you specify.
+ */
 static void get_args(char *fname, lisp_list *args, char *format, ...)
 {
   va_list va;
@@ -74,27 +86,6 @@ static void get_args(char *fname, lisp_list *args, char *format, ...)
   }
 
   va_end(va);
-}
-
-unsigned int wchar_hash(DATA data)
-{
-  wchar_t *wc = data.data_ptr;
-  unsigned int hash = 0;
-
-  while (wc && *wc != L'\0') {
-    hash = (hash << 5) - hash + *wc;
-    wc++;
-  }
-
-  return hash;
-}
-
-int data_compare_wstring(DATA d1, DATA d2)
-{
-  wchar_t *ws1, *ws2;
-  ws1 = d1.data_ptr;
-  ws2 = d2.data_ptr;
-  return wcscmp(ws1, ws2);
 }
 
 /**
@@ -352,26 +343,6 @@ static lisp_value *lisp_null_p(lisp_list *params, lisp_scope *scope)
     retval->value = 0;
   }
   return (lisp_value *)retval;
-}
-
-lisp_scope *lisp_scope_create(void)
-{
-  lisp_scope *scope = smb_new(lisp_scope, 1);
-  scope->up = NULL;
-  ht_init(&scope->table, &wchar_hash, &data_compare_wstring);
-  return scope;
-}
-
-static void lisp_scope_values_decref(DATA d)
-{
-  lisp_value *v = d.data_ptr;
-  lisp_decref(v);
-}
-
-void lisp_scope_delete(lisp_scope *scope)
-{
-  ht_destroy_act(&scope->table, &lisp_scope_values_decref);
-  smb_free(scope);
 }
 
 /**

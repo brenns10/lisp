@@ -207,10 +207,22 @@ void lisp_incref(lisp_value *lv);
 void lisp_decref(lisp_value *lv);
 
 /**
-   @brief Return a "scope" containing global definitions.
+   @brief Create and return a lisp_scope containing all global name definitions.
  */
 lisp_scope *lisp_create_globals(void);
+/**
+   @brief Create an empty scope!
+
+   Anything you put in a new scope should be incref'd, because the scope "owns"
+   a reference to everything in it.
+ */
 lisp_scope *lisp_scope_create(void);
+/**
+   @brief Delete the given scope (not any of its parents though).
+   @param scope Scope to delete.
+
+   When you delete a scope, everything in it gets decref'd.
+ */
 void lisp_scope_delete(lisp_scope *scope);
 
 bool lisp_interactive_exit;
